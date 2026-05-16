@@ -1,0 +1,30 @@
+name: Build Vial Firmware
+on: [workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: qmkfm/qmk_cli
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Fix Git Permissions
+        run: git config --global --add safe.directory '*'
+
+      - name: Clone Vial-QMK and Submodules
+        run: git clone --depth=1 --recurse-submodules https://github.com/vial-kb/vial-qmk.git
+
+      - name: Copy keyboard files
+        run: cp -r MacroPad vial-qmk/keyboards/
+
+      - name: Build Firmware
+        run: |
+          cd vial-qmk
+          make MacroPad:default
+
+      - name: Upload UF2 Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MacroPad_firmware
+          path: vial-qmk/.build/*.uf2
