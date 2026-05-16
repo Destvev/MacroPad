@@ -18,14 +18,24 @@ jobs:
       - name: Copy and Patch keyboard files
         run: |
           # 1. Tworzymy wymaganą strukturę folderów
-          mkdir -p vial-qmk/keyboards/macropad/keymaps/default
+          mkdir -p vial-qmk/keyboards/macropad/keymaps/vial
           
           # 2. Kopiujemy Twoje pliki z repozytorium
           cp config.h rules.mk vial.json vial-qmk/keyboards/macropad/
-          cp keymap.c vial-qmk/keyboards/macropad/keymaps/default/
+          cp keymaps/vial/keymap.c keymaps/vial/config.h keymaps/vial/rules.mk vial-qmk/keyboards/macropad/keymaps/vial/
           
-          # 3. Wstrzykujemy brakującą definicję płytki Pico do rules.mk
-          echo "BOARD = RPI_PICO" >> vial-qmk/keyboards/macropad/rules.mk
+          # 3. Uzupełniamy QMK o obsługę ast.Constant (Python 3.12+)
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("vial-qmk/lib/python/qmk/math.py")
+          text = path.read_text()
+          if "ast.Constant" not in text:
+              text = text.replace(
+                  "def _eval(node):\\n    if isinstance(node, ast.Num):  # <number>\\n        return node.n",
+                  "def _eval(node):\\n    if isinstance(node, ast.Constant):  # <number>\\n        return node.value\\n    if isinstance(node, ast.Num):  # <number>\\n        return node.n",
+              )
+              path.write_text(text)
+          PY
           
           # 4. Generujemy wymagane przez kompilator pliki bazowe klawiatury
           echo '#pragma once' > vial-qmk/keyboards/macropad/macropad.h
@@ -35,7 +45,7 @@ jobs:
       - name: Build Firmware
         run: |
           cd vial-qmk
-          make macropad:default
+          make macropad:vial
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
