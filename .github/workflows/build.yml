@@ -16,15 +16,17 @@ jobs:
         run: git clone --depth=1 --recurse-submodules https://github.com/vial-kb/vial-qmk.git
 
       - name: Copy keyboard files
-        run: cp -r MacroPad vial-qmk/keyboards/
+        run: |
+          mkdir -p vial-qmk/keyboards/macropad
+          cp config.h keymap.c rules.mk vial.json vial-qmk/keyboards/macropad/
 
       - name: Build Firmware
         run: |
           cd vial-qmk
-          make MacroPad:default
+          make macropad:default
 
       - name: Upload UF2 Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MacroPad_firmware
+          name: macropad_firmware
           path: vial-qmk/.build/*.uf2
