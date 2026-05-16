@@ -30,12 +30,17 @@ jobs:
           path = Path("vial-qmk/lib/python/qmk/math.py")
           lines = path.read_text().splitlines()
           if not any("ast.Constant" in line for line in lines):
+              patched = False
               for index, line in enumerate(lines):
-                  if "isinstance(node, ast.Num)" in line:
-                      indent = line.split("if", 1)[0]
+                  stripped = line.lstrip()
+                  if stripped.startswith("if isinstance(node, ast.Num):"):
+                      indent = line[:len(line) - len(stripped)]
                       lines.insert(index, f"{indent}if isinstance(node, ast.Constant):  # <number>")
                       lines.insert(index + 1, f"{indent}    return node.value")
+                      patched = True
                       break
+              if not patched:
+                  raise SystemExit("Failed to patch qmk math.py for ast.Constant")
               path.write_text("\n".join(lines) + "\n")
           PY
           
