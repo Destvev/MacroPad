@@ -21,8 +21,8 @@ jobs:
           mkdir -p vial-qmk/keyboards/macropad/keymaps/vial
           
           # 2. Kopiujemy Twoje pliki z repozytorium
-          cp config.h rules.mk vial.json vial-qmk/keyboards/macropad/
-          cp keymaps/vial/keymap.c keymaps/vial/config.h keymaps/vial/rules.mk vial-qmk/keyboards/macropad/keymaps/vial/
+          cp config.h keyboard.json rules.mk vial-qmk/keyboards/macropad/
+          cp keymaps/vial/keymap.c keymaps/vial/config.h keymaps/vial/rules.mk keymaps/vial/vial.json vial-qmk/keyboards/macropad/keymaps/vial/
           
           # 3. Uzupełniamy QMK o obsługę ast.Constant (Python 3.12+)
           python3 - <<'PY'
