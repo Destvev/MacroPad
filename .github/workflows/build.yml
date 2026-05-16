@@ -24,7 +24,7 @@ jobs:
           cp config.h keyboard.json rules.mk vial-qmk/keyboards/macropad/
           cp keymaps/vial/keymap.c keymaps/vial/config.h keymaps/vial/rules.mk keymaps/vial/vial.json vial-qmk/keyboards/macropad/keymaps/vial/
           
-          # 3. Add ast.Constant support to QMK (Python 3.12+)
+          # 3. Add ast.Constant support to QMK (Python 3.12+ uses ast.Constant for numeric literals)
           python3 - <<'PY'
           from pathlib import Path
           path = Path("vial-qmk/lib/python/qmk/math.py")
