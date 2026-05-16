@@ -15,16 +15,22 @@ jobs:
       - name: Clone Vial-QMK and Submodules
         run: git clone --depth=1 --recurse-submodules https://github.com/vial-kb/vial-qmk.git
 
-      - name: Copy keyboard files
+      - name: Copy and Patch keyboard files
         run: |
-          # Tworzymy pełną, wymaganą strukturę folderów QMK
+          # 1. Tworzymy wymaganą strukturę folderów
           mkdir -p vial-qmk/keyboards/macropad/keymaps/default
           
-          # Kopiujemy główne pliki konfiguracyjne do roota klawiatury
+          # 2. Kopiujemy Twoje pliki z repozytorium
           cp config.h rules.mk vial.json vial-qmk/keyboards/macropad/
-          
-          # Kopiujemy mapę klawiszy do wymaganego podfolderu 'default'
           cp keymap.c vial-qmk/keyboards/macropad/keymaps/default/
+          
+          # 3. Wstrzykujemy brakującą definicję płytki Pico do rules.mk
+          echo "BOARD = RPI_PICO" >> vial-qmk/keyboards/macropad/rules.mk
+          
+          # 4. Generujemy wymagane przez kompilator pliki bazowe klawiatury
+          echo '#pragma once' > vial-qmk/keyboards/macropad/macropad.h
+          echo '#include "quantum.h"' >> vial-qmk/keyboards/macropad/macropad.h
+          echo '#include "macropad.h"' > vial-qmk/keyboards/macropad/macropad.c
 
       - name: Build Firmware
         run: |
@@ -38,5 +44,3 @@ jobs:
           path: |
             vial-qmk/*.uf2
             vial-qmk/*.bin
-            *.uf2
-            *.bin
