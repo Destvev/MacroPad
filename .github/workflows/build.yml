@@ -26,7 +26,7 @@ jobs:
           DIR="/home/runner/vial-qmk/keyboards/macropad"
           mkdir -p "$DIR/keymaps/default"
 
-          # Nowoczesny plik sterujący (zastępuje config.h, rules.mk i macropad.h)
+          # Nowoczesny plik sterujący z poprawną nazwą "board"
           cat << 'EOF' > "$DIR/keyboard.json"
           {
             "keyboard_name": "Moj Makropad",
@@ -34,7 +34,7 @@ jobs:
             "maintainer": "Destvev",
             "processor": "RP2040",
             "bootloader": "rp2040",
-            "development_board": "raspberry_pi_pico",
+            "board": "RASPBERRY_PI_PICO",
             "features": {
               "vial": true
             },
@@ -97,7 +97,7 @@ jobs:
           };
           EOF
 
-          # Puste pliki, żeby kompilator nie krzyczał o ich brak
+          # Puste pliki
           touch "$DIR/config.h"
           touch "$DIR/rules.mk"
 
