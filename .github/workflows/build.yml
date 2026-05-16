@@ -8,41 +8,47 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.8
+      - name: Set up Python 3.9
         uses: actions/setup-python@v5
         with:
-          python-version: '3.8'
+          python-version: '3.9'
 
-      - name: Install ARM Toolchain
+      - name: Install Toolchain and QMK CLI
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi
+          python -m pip install --upgrade pip
+          pip install qmk
 
       - name: Clone Vial-QMK and Submodules
         run: |
-          git clone --depth=1 https://github.com/vial-kb/vial-qmk.git
-          cd vial-qmk
+          git clone --depth=1 https://github.com/vial-kb/vial-qmk.git /home/runner/qmk_firmware
+          cd /home/runner/qmk_firmware
           git submodule update --init --recursive --depth=1
 
       - name: Prepare Keyboard Directory
         run: |
-          mkdir -p vial-qmk/keyboards/macropad/keymaps/default
-          cp config.h rules.mk vial.json vial-qmk/keyboards/macropad/
-          cp keymap.c vial-qmk/keyboards/macropad/keymaps/default/
+          KEYBOARD_DIR="/home/runner/qmk_firmware/keyboards/macropad"
+          mkdir -p "$KEYBOARD_DIR/keymaps/default"
           
-          # Tworzymy pliki strukturalne i wstrzykujemy makro układu przycisków
-          echo '#pragma once' > vial-qmk/keyboards/macropad/macropad.h
-          echo '#include "quantum.h"' >> vial-qmk/keyboards/macropad/macropad.h
-          echo '#define LAYOUT_ortho_3x3(k00, k01, k02, k10, k11, k12, k20, k21, k22) { { k00, k01, k02 }, { k10, k11, k12 }, { k20, k21, k22 } }' >> vial-qmk/keyboards/macropad/macropad.h
-          echo '#include "macropad.h"' > vial-qmk/keyboards/macropad/macropad.c
+          # Kopiujemy Twoje pliki z repozytorium do struktury QMK
+          cp config.h rules.mk vial.json "$KEYBOARD_DIR/"
+          cp keymap.c "$KEYBOARD_DIR/keymaps/default/"
+          
+          # Generujemy niezbędne pliki strukturalne C
+          echo '#pragma once' > "$KEYBOARD_DIR/macropad.h"
+          echo '#include "quantum.h"' >> "$KEYBOARD_DIR/macropad.h"
+          echo '#define LAYOUT_ortho_3x3(k00, k01, k02, k10, k11, k12, k20, k21, k22) { { k00, k01, k02 }, { k10, k11, k12 }, { k20, k21, k22 } }' >> "$KEYBOARD_DIR/macropad.h"
+          echo '#include "macropad.h"' > "$KEYBOARD_DIR/macropad.c"
 
       - name: Build Firmware
         run: |
-          cd vial-qmk
-          make macropad:default
+          cd /home/runner/qmk_firmware
+          qmk setup -y
+          qmk compile -kb macropad -km default
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macropad_firmware
-          path: vial-qmk/*.uf2
+          path: /home/runner/qmk_firmware/*.uf2
