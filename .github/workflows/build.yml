@@ -36,7 +36,7 @@ jobs:
                       lines.insert(index, f"{indent}if isinstance(node, ast.Constant):  # <number>")
                       lines.insert(index + 1, f"{indent}    return node.value")
                       break
-              path.write_text("\\n".join(lines) + "\\n")
+              path.write_text("\n".join(lines) + "\n")
           PY
           
           # 4. Generate base keyboard files required by the compiler
