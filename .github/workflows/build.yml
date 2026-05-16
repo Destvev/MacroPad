@@ -17,16 +17,26 @@ jobs:
 
       - name: Copy keyboard files
         run: |
-          mkdir -p vial-qmk/keyboards/macropad
-          cp config.h keymap.c rules.mk vial.json vial-qmk/keyboards/macropad/
+          # Tworzymy pełną, wymaganą strukturę folderów QMK
+          mkdir -p vial-qmk/keyboards/macropad/keymaps/default
+          
+          # Kopiujemy główne pliki konfiguracyjne do roota klawiatury
+          cp config.h rules.mk vial.json vial-qmk/keyboards/macropad/
+          
+          # Kopiujemy mapę klawiszy do wymaganego podfolderu 'default'
+          cp keymap.c vial-qmk/keyboards/macropad/keymaps/default/
 
       - name: Build Firmware
         run: |
           cd vial-qmk
           make macropad:default
 
-      - name: Upload UF2 Artifact
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macropad_firmware
-          path: "**/*.uf2"
+          path: |
+            vial-qmk/*.uf2
+            vial-qmk/*.bin
+            *.uf2
+            *.bin
