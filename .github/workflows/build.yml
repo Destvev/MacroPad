@@ -17,14 +17,14 @@ jobs:
 
       - name: Copy and Patch keyboard files
         run: |
-          # 1. Tworzymy wymaganą strukturę folderów
+          # 1. Create required folder structure
           mkdir -p vial-qmk/keyboards/macropad/keymaps/vial
           
-          # 2. Kopiujemy Twoje pliki z repozytorium
+          # 2. Copy files from the repository
           cp config.h keyboard.json rules.mk vial-qmk/keyboards/macropad/
           cp keymaps/vial/keymap.c keymaps/vial/config.h keymaps/vial/rules.mk keymaps/vial/vial.json vial-qmk/keyboards/macropad/keymaps/vial/
           
-          # 3. Uzupełniamy QMK o obsługę ast.Constant (Python 3.12+)
+          # 3. Add ast.Constant support to QMK (Python 3.12+)
           python3 - <<'PY'
           from pathlib import Path
           path = Path("vial-qmk/lib/python/qmk/math.py")
@@ -37,7 +37,7 @@ jobs:
               path.write_text(text)
           PY
           
-          # 4. Generujemy wymagane przez kompilator pliki bazowe klawiatury
+          # 4. Generate base keyboard files required by the compiler
           echo '#pragma once' > vial-qmk/keyboards/macropad/macropad.h
           echo '#include "quantum.h"' >> vial-qmk/keyboards/macropad/macropad.h
           echo '#include "macropad.h"' > vial-qmk/keyboards/macropad/macropad.c

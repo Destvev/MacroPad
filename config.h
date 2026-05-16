@@ -1,2 +1,2 @@
 #pragma once
-// Konfiguracja klawiatury jest opisana w keyboard.json.
+// Keyboard configuration is described in keyboard.json.
