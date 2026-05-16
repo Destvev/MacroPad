@@ -8,35 +8,98 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install Toolchain and QMK CLI
+      - name: Install QMK Environment
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc-arm-none-eabi binutils-arm-none-eabi git python3-pip
-          python3 -m pip install --upgrade pip
           python3 -m pip install qmk
 
       - name: Clone Vial-QMK
         run: |
           git clone https://github.com/vial-kb/vial-qmk.git /home/runner/vial-qmk
-          
-          # KRYTYCZNY KROK: Zmuszamy QMK CLI do użycia folderu z Vialem!
           qmk config user.qmk_home=/home/runner/vial-qmk
-          
           cd /home/runner/vial-qmk
           make git-submodule
 
-      - name: Prepare Keyboard Directory
+      - name: Generate Modern Data-Driven Files
         run: |
-          KEYBOARD_DIR="/home/runner/vial-qmk/keyboards/macropad"
-          mkdir -p "$KEYBOARD_DIR/keymaps/default"
-          
-          cp config.h rules.mk vial.json "$KEYBOARD_DIR/"
-          cp keymap.c "$KEYBOARD_DIR/keymaps/default/"
-          
-          echo '#pragma once' > "$KEYBOARD_DIR/macropad.h"
-          echo '#include "quantum.h"' >> "$KEYBOARD_DIR/macropad.h"
-          echo '#define LAYOUT_ortho_3x3(k00, k01, k02, k10, k11, k12, k20, k21, k22) { { k00, k01, k02 }, { k10, k11, k12 }, { k20, k21, k22 } }' >> "$KEYBOARD_DIR/macropad.h"
-          echo '#include "macropad.h"' > "$KEYBOARD_DIR/macropad.c"
+          DIR="/home/runner/vial-qmk/keyboards/macropad"
+          mkdir -p "$DIR/keymaps/default"
+
+          # Nowoczesny plik sterujący (zastępuje config.h, rules.mk i macropad.h)
+          cat << 'EOF' > "$DIR/keyboard.json"
+          {
+            "keyboard_name": "Moj Makropad",
+            "manufacturer": "Destvev",
+            "maintainer": "Destvev",
+            "processor": "RP2040",
+            "bootloader": "rp2040",
+            "development_board": "raspberry_pi_pico",
+            "features": {
+              "vial": true
+            },
+            "matrix_pins": {
+              "direct": [
+                ["GP15", "GP14", "GP13"],
+                ["GP26", "GP27", "GP22"],
+                ["GP6", "GP7", "GP8"]
+              ]
+            },
+            "vial": {
+              "uid": "0x4269333724991501",
+              "unlock": [ [0,0], [0,1] ]
+            },
+            "layouts": {
+              "LAYOUT": {
+                "layout": [
+                  {"matrix": [0, 0], "x": 0, "y": 0},
+                  {"matrix": [0, 1], "x": 1, "y": 0},
+                  {"matrix": [0, 2], "x": 2, "y": 0},
+                  {"matrix": [1, 0], "x": 0, "y": 1},
+                  {"matrix": [1, 1], "x": 1, "y": 1},
+                  {"matrix": [1, 2], "x": 2, "y": 1},
+                  {"matrix": [2, 0], "x": 0, "y": 2},
+                  {"matrix": [2, 1], "x": 1, "y": 2},
+                  {"matrix": [2, 2], "x": 2, "y": 2}
+                ]
+              }
+            }
+          }
+          EOF
+
+          # Plik dla interfejsu przeglądarki Vial
+          cat << 'EOF' > "$DIR/vial.json"
+          {
+            "name": "Moj Makropad",
+            "vendorId": "0xFEED",
+            "productId": "0x0001",
+            "lighting": "none",
+            "matrix": { "rows": 3, "cols": 3 },
+            "layouts": {
+              "keymap": [
+                ["0,0", "0,1", "0,2"],
+                ["1,0", "1,1", "1,2"],
+                ["2,0", "2,1", "2,2"]
+              ]
+            }
+          }
+          EOF
+
+          # Uproszczona mapa klawiszy C
+          cat << 'EOF' > "$DIR/keymaps/default/keymap.c"
+          #include QMK_KEYBOARD_H
+          const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
+              [0] = LAYOUT(
+                  KC_1, KC_2, KC_3,
+                  KC_4, KC_5, KC_6,
+                  KC_7, KC_8, KC_9
+              )
+          };
+          EOF
+
+          # Puste pliki, żeby kompilator nie krzyczał o ich brak
+          touch "$DIR/config.h"
+          touch "$DIR/rules.mk"
 
       - name: Build Firmware
         run: |
