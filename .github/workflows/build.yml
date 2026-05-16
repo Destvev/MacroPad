@@ -3,41 +3,36 @@ on: [workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.9'
-
-      - name: Install ARM Toolchain
+      - name: Install Toolchain and QMK CLI
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi
+          sudo apt-get install -y gcc-arm-none-eabi binutils-arm-none-eabi git python3-pip
+          python3 -m pip install --upgrade pip
+          python3 -m pip install qmk
 
-      - name: Clone Vial-QMK Fully with Submodules
+      - name: Clone Vial-QMK
         run: |
-          git clone --recursive --depth=1 https://github.com/vial-kb/vial-qmk.git /home/runner/vial-qmk
-
-      - name: Install Local Python Dependencies
-        run: |
+          git clone https://github.com/vial-kb/vial-qmk.git /home/runner/vial-qmk
+          
+          # KRYTYCZNY KROK: Zmuszamy QMK CLI do użycia folderu z Vialem!
+          qmk config user.qmk_home=/home/runner/vial-qmk
+          
           cd /home/runner/vial-qmk
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          make git-submodule
 
       - name: Prepare Keyboard Directory
         run: |
           KEYBOARD_DIR="/home/runner/vial-qmk/keyboards/macropad"
           mkdir -p "$KEYBOARD_DIR/keymaps/default"
           
-          # Kopiujemy Twoje pliki do struktury systemu
           cp config.h rules.mk vial.json "$KEYBOARD_DIR/"
           cp keymap.c "$KEYBOARD_DIR/keymaps/default/"
           
-          # Tworzymy pliki bazowe C
           echo '#pragma once' > "$KEYBOARD_DIR/macropad.h"
           echo '#include "quantum.h"' >> "$KEYBOARD_DIR/macropad.h"
           echo '#define LAYOUT_ortho_3x3(k00, k01, k02, k10, k11, k12, k20, k21, k22) { { k00, k01, k02 }, { k10, k11, k12 }, { k20, k21, k22 } }' >> "$KEYBOARD_DIR/macropad.h"
@@ -46,7 +41,7 @@ jobs:
       - name: Build Firmware
         run: |
           cd /home/runner/vial-qmk
-          make macropad:default
+          qmk compile -kb macropad -km default
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
